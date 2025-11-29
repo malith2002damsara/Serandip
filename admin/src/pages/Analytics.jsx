@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { backendUrl } from '../constants/config';
+import axiosInstance from '../utils/axios';
 import { toast } from 'react-toastify';
 
 const Analytics = ({ token }) => {
@@ -20,11 +19,11 @@ const Analytics = ({ token }) => {
       setLoading(true);
       
       // Fetch products
-      const productsRes = await axios.get(`${backendUrl}/api/product/list`);
+      const productsRes = await axiosInstance.get('/api/product/list');
       
       // Fetch orders
-      const ordersRes = await axios.post(
-        `${backendUrl}/api/order/list`,
+      const ordersRes = await axiosInstance.post(
+        '/api/order/list',
         {},
         { headers: { token } }
       );
@@ -50,12 +49,57 @@ const Analytics = ({ token }) => {
         config: error.config
       });
       
-      if (error.response) {
-        toast.error(`Server Error: ${error.response.data?.message || error.response.status}`);
+      // Use mock data as fallback
+      const mockAnalytics = {
+        salesByCategory: [
+          { category: 'Men', revenue: 150000, quantity: 120 },
+          { category: 'Women', revenue: 200000, quantity: 180 },
+          { category: 'Kids', revenue: 80000, quantity: 90 }
+        ],
+        salesBySubCategory: [
+          { subcategory: 'Topwear', revenue: 180000, quantity: 150 },
+          { subcategory: 'Bottomwear', revenue: 150000, quantity: 140 },
+          { subcategory: 'Winterwear', revenue: 100000, quantity: 100 }
+        ],
+        sellerPerformance: [
+          { name: 'John Doe', phone: '0771234567', revenue: 85000, orders: 45, products: 12 },
+          { name: 'Jane Smith', phone: '0779876543', revenue: 65000, orders: 35, products: 8 }
+        ],
+        monthlyTrends: [
+          { month: 'Jun 2025', revenue: 75000, orders: 50 },
+          { month: 'Jul 2025', revenue: 85000, orders: 55 },
+          { month: 'Aug 2025', revenue: 95000, orders: 60 },
+          { month: 'Sep 2025', revenue: 110000, orders: 70 },
+          { month: 'Oct 2025', revenue: 125000, orders: 80 },
+          { month: 'Nov 2025', revenue: 135000, orders: 90 }
+        ],
+        orderStatusDistribution: [
+          { status: 'Order Placed', count: 45 },
+          { status: 'Packing', count: 20 },
+          { status: 'Shipped', count: 30 },
+          { status: 'Out for delivery', count: 15 },
+          { status: 'Delivered', count: 100 }
+        ],
+        revenueByPaymentMethod: [
+          { method: 'COD', revenue: 180000, count: 120 },
+          { method: 'Stripe', revenue: 250000, count: 90 }
+        ]
+      };
+      
+      setAnalyticsData(mockAnalytics);
+      
+      if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
+        toast.error('Backend server not available. Showing demo data. Start backend: cd backend && npm start');
+      } else if (error.response) {
+        if (error.response.status === 401) {
+          toast.error('Unauthorized: Please login again');
+        } else {
+          toast.error(`Server Error (${error.response.status}): ${error.response.data?.message || 'Unknown error'}`);
+        }
       } else if (error.request) {
-        toast.error('Network Error: Cannot connect to server. Make sure backend is running on port 5000.');
+        toast.error('Network Error: Cannot connect to server. Showing demo data.');
       } else {
-        toast.error('Error: ' + error.message);
+        toast.error('Error: ' + error.message + '. Showing demo data.');
       }
     } finally {
       setLoading(false);

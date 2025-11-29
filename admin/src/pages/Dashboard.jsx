@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { backendUrl } from '../constants/config';
+import axiosInstance, { backendUrl } from '../utils/axios';
 import { toast } from 'react-toastify';
 
 // Helper functions moved outside component to avoid dependency issues
@@ -247,22 +246,21 @@ const Dashboard = ({ token }) => {
       console.log('Token available:', !!token);
       
       // Test backend connection first
-      const healthCheck = await axios.get(`${backendUrl}/`, { timeout: 5000 });
+      const healthCheck = await axiosInstance.get('/');
       console.log('Backend health check:', healthCheck.data);
       
       // Fetch products
       console.log('Fetching products...');
-      const productsRes = await axios.get(`${backendUrl}/api/product/list`, { timeout: 10000 });
+      const productsRes = await axiosInstance.get('/api/product/list');
       console.log('Products response:', productsRes.data);
       
       // Fetch orders
       console.log('Fetching orders...');
-      const ordersRes = await axios.post(
-        `${backendUrl}/api/order/list`,
+      const ordersRes = await axiosInstance.post(
+        '/api/order/list',
         {},
         { 
-          headers: { token },
-          timeout: 10000
+          headers: { token }
         }
       );
       console.log('Orders response:', ordersRes.data);

@@ -1,8 +1,13 @@
-  {
-    "rewrites": [
-      {
-        "source": "/(.*)",
-        "destination": "/"
-      }
-    ]
-  }
+{
+  "build": {
+    "env": {
+      "VITE_BACKEND_URL": "https://ceylonbackend.vercel.app"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}

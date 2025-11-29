@@ -43,6 +43,11 @@ const Orders = () => {
       }
     } catch (error) {
       console.error('Error loading orders:', error)
+      if (error.response) {
+        console.error('Response error:', error.response.data)
+      } else if (error.request) {
+        console.error('Network error - no response received')
+      }
     }
   }, [token, backendUrl])
 

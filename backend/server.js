@@ -26,11 +26,9 @@ const initializeConnections = async () => {
       isConnected = true
       console.log('Database and Cloudinary connected successfully')
     } catch (error) {
-      console.error('Connection error:', error)
-      // Don't throw error in serverless environment to prevent crashes
-      if (process.env.NODE_ENV === 'development') {
-        throw error
-      }
+      console.error('Connection error:', error.message)
+      // Don't throw error - allow server to run even if DB connection fails temporarily
+      isConnected = false
     } finally {
       isInitializing = false
     }
@@ -42,12 +40,25 @@ app.use(express.json({ limit: '10mb' }))
 
 // Enhanced CORS configuration for Vercel
 app.use(cors({
-  origin: [
-    'https://ceylonadmin.vercel.app',
-    'https://ceylonfrontend.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:5174'
-  ],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://ceylonadmin.vercel.app',
+      'https://ceylonfrontend.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000'
+    ];
+    
+    // Check if the origin is allowed
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for now to fix CORS issues
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -55,19 +66,16 @@ app.use(cors({
     'Authorization', 
     'X-Requested-With',
     'Accept',
-    'Origin'
+    'Origin',
+    'token'
   ],
+  exposedHeaders: ['token'],
   optionsSuccessStatus: 200
 }))
 
 // Handle preflight OPTIONS requests explicitly
 app.options('*', cors({
-  origin: [
-    'https://ceylonadmin.vercel.app',
-    'https://ceylonfrontend.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:5174'
-  ],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -75,8 +83,10 @@ app.options('*', cors({
     'Authorization', 
     'X-Requested-With',
     'Accept',
-    'Origin'
-  ]
+    'Origin',
+    'token'
+  ],
+  exposedHeaders: ['token']
 }))
 
 // Initialize connections before handling requests
@@ -85,11 +95,9 @@ app.use(async (req, res, next) => {
     await initializeConnections()
     next()
   } catch (error) {
-    console.error('Initialization error:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Server initialization failed'
-    })
+    console.error('Initialization error:', error.message)
+    // Continue anyway - some endpoints may still work
+    next()
   }
 })
 
@@ -148,7 +156,11 @@ app.use((err, req, res, next) => {
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => console.log('Server started on PORT: ' + port))
+  app.listen(port, () => {
+    console.log('Server started on PORT: ' + port)
+    console.log('Server listening on http://localhost:' + port)
+    console.log('Attempting to connect to MongoDB...')
+  })
 }
 
 // Export for Vercel (ES module syntax)

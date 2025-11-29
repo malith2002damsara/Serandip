@@ -126,9 +126,21 @@ switch (method) {
   }
 
   }catch (error) {
-  console.log(error)
-  toast.error(error.message)
-
+  console.log('PlaceOrder error:', error)
+  
+  if (error.response) {
+    // Server responded with error
+    console.error('Server error:', error.response.data)
+    toast.error(error.response.data.message || 'Server error occurred')
+  } else if (error.request) {
+    // Request made but no response
+    console.error('Network error:', error.request)
+    toast.error('Network error: Could not connect to server')
+  } else {
+    // Other errors
+    console.error('Error:', error.message)
+    toast.error(error.message || 'An error occurred')
+  }
 }
 
 

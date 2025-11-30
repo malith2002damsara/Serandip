@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { backendUrl, currency } from '../constants/config';
 import { toast } from 'react-toastify';
 import { assets } from '../assets/assets';
 import { FiFilter, FiCalendar, FiX } from 'react-icons/fi';
+import { useSearchParams } from 'react-router-dom';
 
 const Orders = ({ token }) => {
   const [orders, setOrders] = useState([]);
@@ -15,6 +16,52 @@ const Orders = ({ token }) => {
     dateRange: ''
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const orderRefs = useRef({});
+
+  // Auto-apply filters whenever orders or filter values change
+  useEffect(() => {
+    let result = [...orders];
+
+    if (filters.status) {
+      result = result.filter(order => order.status === filters.status);
+    }
+
+    if (filters.paymentMethod) {
+      result = result.filter(order => order.paymentMethod === filters.paymentMethod);
+    }
+
+    if (filters.dateRange) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (filters.dateRange === 'today') {
+        result = result.filter(order => {
+          const orderDate = new Date(order.date);
+          orderDate.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === today.getTime();
+        });
+      } else if (filters.dateRange === 'week') {
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        weekAgo.setHours(0, 0, 0, 0);
+        result = result.filter(order => {
+          const orderDate = new Date(order.date);
+          return orderDate >= weekAgo;
+        });
+      } else if (filters.dateRange === 'month') {
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        monthAgo.setHours(0, 0, 0, 0);
+        result = result.filter(order => {
+          const orderDate = new Date(order.date);
+          return orderDate >= monthAgo;
+        });
+      }
+    }
+
+    setFilteredOrders(result);
+  }, [orders, filters]);
 
   useEffect(() => {
     const fetchAllOrders = async () => {
@@ -43,6 +90,29 @@ const Orders = ({ token }) => {
 
     fetchAllOrders();
   }, [token]);
+
+  // Handle highlight from notification
+  useEffect(() => {
+    const highlightOrderId = searchParams.get('highlight');
+    if (highlightOrderId && orderRefs.current[highlightOrderId]) {
+      // Wait for render and smooth scroll to the order
+      setTimeout(() => {
+        orderRefs.current[highlightOrderId].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        
+        // Add highlight animation
+        orderRefs.current[highlightOrderId].classList.add('highlight-animation');
+        
+        // Remove highlight after animation
+        setTimeout(() => {
+          orderRefs.current[highlightOrderId]?.classList.remove('highlight-animation');
+          setSearchParams({}); // Clear the highlight param
+        }, 3000);
+      }, 300);
+    }
+  }, [searchParams, filteredOrders, setSearchParams]);
 
   const statusHandler = async (event, orderId) => {
     try {
@@ -90,19 +160,28 @@ const Orders = ({ token }) => {
         case 'today':
           result = result.filter(order => {
             const orderDate = new Date(order.date);
-            return orderDate.toDateString() === today.toDateString();
+            orderDate.setHours(0, 0, 0, 0);
+            return orderDate.getTime() === today.getTime();
           });
           break;
         case 'week': {
           const weekAgo = new Date(today);
           weekAgo.setDate(weekAgo.getDate() - 7);
-          result = result.filter(order => new Date(order.date) >= weekAgo);
+          weekAgo.setHours(0, 0, 0, 0);
+          result = result.filter(order => {
+            const orderDate = new Date(order.date);
+            return orderDate >= weekAgo;
+          });
           break;
         }
         case 'month': {
           const monthAgo = new Date(today);
           monthAgo.setMonth(monthAgo.getMonth() - 1);
-          result = result.filter(order => new Date(order.date) >= monthAgo);
+          monthAgo.setHours(0, 0, 0, 0);
+          result = result.filter(order => {
+            const orderDate = new Date(order.date);
+            return orderDate >= monthAgo;
+          });
           break;
         }
         default:
@@ -293,8 +372,9 @@ const Orders = ({ token }) => {
 
           {filteredOrders.map((order, index) => (
             <div 
-              key={index} 
-              className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
+              key={index}
+              ref={(el) => (orderRefs.current[order._id] = el)}
+              className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all"
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6">
                 {/* Order Icon */}

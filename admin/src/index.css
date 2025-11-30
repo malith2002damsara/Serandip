@@ -16,3 +16,19 @@ select,input,textarea{
   background-color: #ffebf5;
   border-color: #C586A5;
 }
+
+/* Notification highlight animation */
+@keyframes highlight-pulse {
+  0%, 100% {
+    background-color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    background-color: #dbeafe;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.highlight-animation {
+  animation: highlight-pulse 1.5s ease-in-out 2;
+}

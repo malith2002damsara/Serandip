@@ -14,102 +14,6 @@ const Analytics = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30'); // days
 
-  const fetchAnalyticsData = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch products
-      const productsRes = await axiosInstance.get('/api/product/list');
-      
-      // Fetch orders
-      const ordersRes = await axiosInstance.post(
-        '/api/order/list',
-        {},
-        { headers: { token } }
-      );
-
-      if (productsRes.data.success && ordersRes.data.success) {
-        const products = productsRes.data.products || [];
-        const orders = ordersRes.data.orders || [];
-        
-        // Filter orders by date range
-        const filteredOrders = filterOrdersByDateRange(orders, parseInt(dateRange));
-        
-        const analytics = calculateDetailedAnalytics(products, filteredOrders);
-        setAnalyticsData(analytics);
-      } else {
-        toast.error('Failed to load analytics data');
-      }
-    } catch (error) {
-      console.error('Error fetching analytics data:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config
-      });
-      
-      // Use mock data as fallback
-      const mockAnalytics = {
-        salesByCategory: [
-          { category: 'Men', revenue: 150000, quantity: 120 },
-          { category: 'Women', revenue: 200000, quantity: 180 },
-          { category: 'Kids', revenue: 80000, quantity: 90 }
-        ],
-        salesBySubCategory: [
-          { subcategory: 'Topwear', revenue: 180000, quantity: 150 },
-          { subcategory: 'Bottomwear', revenue: 150000, quantity: 140 },
-          { subcategory: 'Winterwear', revenue: 100000, quantity: 100 }
-        ],
-        sellerPerformance: [
-          { name: 'John Doe', phone: '0771234567', revenue: 85000, orders: 45, products: 12 },
-          { name: 'Jane Smith', phone: '0779876543', revenue: 65000, orders: 35, products: 8 }
-        ],
-        monthlyTrends: [
-          { month: 'Jun 2025', revenue: 75000, orders: 50 },
-          { month: 'Jul 2025', revenue: 85000, orders: 55 },
-          { month: 'Aug 2025', revenue: 95000, orders: 60 },
-          { month: 'Sep 2025', revenue: 110000, orders: 70 },
-          { month: 'Oct 2025', revenue: 125000, orders: 80 },
-          { month: 'Nov 2025', revenue: 135000, orders: 90 }
-        ],
-        orderStatusDistribution: [
-          { status: 'Order Placed', count: 45 },
-          { status: 'Packing', count: 20 },
-          { status: 'Shipped', count: 30 },
-          { status: 'Out for delivery', count: 15 },
-          { status: 'Delivered', count: 100 }
-        ],
-        revenueByPaymentMethod: [
-          { method: 'COD', revenue: 180000, count: 120 },
-          { method: 'Stripe', revenue: 250000, count: 90 }
-        ]
-      };
-      
-      setAnalyticsData(mockAnalytics);
-      
-      if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
-        toast.error('Backend server not available. Showing demo data. Start backend: cd backend && npm start');
-      } else if (error.response) {
-        if (error.response.status === 401) {
-          toast.error('Unauthorized: Please login again');
-        } else {
-          toast.error(`Server Error (${error.response.status}): ${error.response.data?.message || 'Unknown error'}`);
-        }
-      } else if (error.request) {
-        toast.error('Network Error: Cannot connect to server. Showing demo data.');
-      } else {
-        toast.error('Error: ' + error.message + '. Showing demo data.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange, token]);
-
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, [fetchAnalyticsData]);
-
   const filterOrdersByDateRange = (orders, days) => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -117,7 +21,37 @@ const Analytics = ({ token }) => {
     return orders.filter(order => new Date(order.date) >= cutoffDate);
   };
 
-  const calculateDetailedAnalytics = React.useCallback((products, orders) => {
+  const calculateMonthlyTrends = React.useCallback((orders) => {
+    const months = {};
+    const now = new Date();
+    
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      months[key] = { revenue: 0, orders: 0 };
+    }
+
+    // Process all orders and group by month
+    orders.forEach(order => {
+      const orderDate = new Date(order.date);
+      const key = orderDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      // Add to the month if it exists in our 6-month window
+      if (key in months) {
+        months[key].revenue += order.amount || 0;
+        months[key].orders += 1;
+      }
+    });
+
+    return Object.entries(months).map(([month, data]) => ({ 
+      month, 
+      revenue: data.revenue,
+      orders: data.orders 
+    }));
+  }, []);
+
+  const calculateDetailedAnalytics = React.useCallback((products, filteredOrders, allOrders) => {
     // Sales by Category
     const categoryStats = {};
     const subCategoryStats = {};
@@ -146,8 +80,8 @@ const Analytics = ({ token }) => {
       }
     });
 
-    // Calculate from orders
-    orders.forEach(order => {
+    // Calculate from filtered orders (based on selected date range)
+    filteredOrders.forEach(order => {
       // Order status distribution
       orderStatusStats[order.status] = (orderStatusStats[order.status] || 0) + 1;
       
@@ -189,8 +123,8 @@ const Analytics = ({ token }) => {
       }
     });
 
-    // Monthly trends (last 6 months)
-    const monthlyTrends = calculateMonthlyTrends(orders);
+    // Monthly trends - use all orders for last 6 months (not filtered by date range selector)
+    const monthlyTrends = calculateMonthlyTrends(allOrders);
 
     return {
       salesByCategory: Object.entries(categoryStats).map(([category, stats]) => ({
@@ -217,30 +151,65 @@ const Analytics = ({ token }) => {
         ...data
       }))
     };
-  }, []);
+  }, [calculateMonthlyTrends]);
 
-  const calculateMonthlyTrends = (orders) => {
-    const months = {};
-    const now = new Date();
-    
-    // Initialize last 6 months
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      months[key] = { revenue: 0, orders: 0 };
-    }
+  const fetchAnalyticsData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch products
+      const productsRes = await axiosInstance.get('/api/product/list');
+      
+      // Fetch orders
+      const ordersRes = await axiosInstance.post(
+        '/api/order/list',
+        {},
+        { headers: { token } }
+      );
 
-    orders.forEach(order => {
-      const orderDate = new Date(order.date);
-      const key = orderDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      if (months[key]) {
-        months[key].revenue += order.amount;
-        months[key].orders++;
+      if (productsRes.data.success && ordersRes.data.success) {
+        const products = productsRes.data.products || [];
+        const orders = ordersRes.data.orders || [];
+        
+        // Filter orders by date range for most analytics
+        const filteredOrders = filterOrdersByDateRange(orders, parseInt(dateRange));
+        
+        // Pass both filtered and all orders to analytics calculation
+        const analytics = calculateDetailedAnalytics(products, filteredOrders, orders);
+        setAnalyticsData(analytics);
+      } else {
+        toast.error('Failed to load analytics data');
+        // Set empty data structure instead of mock data
+        setAnalyticsData({
+          salesByCategory: [],
+          salesBySubCategory: [],
+          sellerPerformance: [],
+          monthlyTrends: [],
+          orderStatusDistribution: [],
+          revenueByPaymentMethod: []
+        });
       }
-    });
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      toast.error('Failed to load analytics data');
+      
+      // Set empty data structure on error
+      setAnalyticsData({
+        salesByCategory: [],
+        salesBySubCategory: [],
+        sellerPerformance: [],
+        monthlyTrends: [],
+        orderStatusDistribution: [],
+        revenueByPaymentMethod: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange, token, calculateDetailedAnalytics]);
 
-    return Object.entries(months).map(([month, data]) => ({ month, ...data }));
-  };
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [fetchAnalyticsData]);
 
   if (loading) {
     return (
@@ -267,6 +236,7 @@ const Analytics = ({ token }) => {
             onChange={(e) => setDateRange(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
+            <option value="1">Today</option>
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
             <option value="90">Last 90 days</option>

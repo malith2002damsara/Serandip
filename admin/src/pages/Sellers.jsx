@@ -13,19 +13,46 @@ const Sellers = ({ token }) => {
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const fetchSellers = async () => {
+  const fetchSellers = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      // Use dedicated sellers API endpoint
-      const response = await axios.get(`${backendUrl}/api/seller/list`);
+      // Fetch sellers
+      const sellersResponse = await axios.get(`${backendUrl}/api/seller/list`);
       
-      if (response.data.success) {
-        const sellersData = response.data.sellers.map(seller => ({
-          ...seller,
-          totalRevenue: 0 // We'll calculate this from orders if needed
-        }));
-        setSellers(sellersData);
-        setFilteredSellers(sellersData);
+      // Fetch all orders to calculate revenue
+      const ordersResponse = await axios.post(
+        `${backendUrl}/api/order/list`,
+        {},
+        { headers: { token } }
+      );
+      
+      if (sellersResponse.data.success) {
+        const sellersData = sellersResponse.data.sellers;
+        const orders = ordersResponse.data.success ? ordersResponse.data.orders : [];
+        
+        // Calculate revenue for each seller
+        const sellersWithRevenue = sellersData.map(seller => {
+          let totalRevenue = 0;
+          
+          // Calculate revenue from orders
+          orders.forEach(order => {
+            if (order.items && Array.isArray(order.items)) {
+              order.items.forEach(item => {
+                if (item.sellername === seller.name) {
+                  totalRevenue += (item.price || 0) * (item.quantity || 0);
+                }
+              });
+            }
+          });
+          
+          return {
+            ...seller,
+            totalRevenue
+          };
+        });
+        
+        setSellers(sellersWithRevenue);
+        setFilteredSellers(sellersWithRevenue);
       } else {
         toast.error('Failed to fetch sellers');
       }
@@ -35,7 +62,7 @@ const Sellers = ({ token }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
@@ -80,8 +107,10 @@ const Sellers = ({ token }) => {
   };
 
   useEffect(() => {
-    fetchSellers();
-  }, []);
+    if (token) {
+      fetchSellers();
+    }
+  }, [token, fetchSellers]);
 
   if (isLoading) {
     return (

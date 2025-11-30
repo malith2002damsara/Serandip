@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
 
 
-const Sidebar = () => {
+const Sidebar = ({ setToken }) => {
   return (
-    <div className='w-16 lg:w-[18%] min-h-screen border-r-2 bg-white shadow-sm'>
-      <div className='flex flex-col gap-4 pt-6 pl-2 lg:pl-[20%] text-[15px]'>
+    <div className='w-16 lg:w-[18%] min-h-screen border-r-2 bg-white shadow-sm flex flex-col'>
+      <div className='flex flex-col gap-4 pt-6 pl-2 lg:pl-[20%] text-[15px] flex-1'>
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-2 lg:px-3 py-2 rounded-l hover:bg-blue-50 transition-colors ${isActive ? 'bg-blue-100 border-blue-300' : ''
@@ -86,40 +86,15 @@ const Sidebar = () => {
           <p className='hidden lg:block'>Orders</p>
         </NavLink>
 
-        {/* <div className='mt-6 px-3'>
-          <h3 className='text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3'>Business Intelligence</h3>
-          <div className='space-y-2'>
-            <div className='text-xs text-gray-600 flex items-center gap-2'>
-              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-              Dashboard Overview
-            </div>
-            <div className='text-xs text-gray-600 flex items-center gap-2'>
-              <span className="w-2 h-2 bg-teal-400 rounded-full"></span>
-              Advanced Analytics
-            </div>
-            <div className='text-xs text-gray-600 flex items-center gap-2'>
-              <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
-              Seller Management
-            </div>
-            <div className='text-xs text-gray-600 flex items-center gap-2'>
-              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-              Product Management
-            </div>
-            <div className='text-xs text-gray-600 flex items-center gap-2'>
-              <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
-              Order Tracking
-            </div>
-          </div>
-          
-          <div className='mt-4 pt-3 border-t border-gray-200'>
-            <NavLink 
-              to='/test'
-              className='text-xs text-blue-600 hover:text-blue-800 underline'
-            >
-              🧪 Test Dashboard
-            </NavLink>
-          </div>
-        </div> */}
+        <button
+          onClick={() => setToken('')}
+          className='flex items-center gap-3 border border-red-300 border-r-0 px-3 py-2 rounded-l hover:bg-red-50 transition-colors w-full text-left'
+        >
+          <svg className='w-5 h-5 text-red-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'></path>
+          </svg>
+          <p className='hidden lg:block text-red-600 font-medium'>Logout</p>
+        </button>
       </div>
     </div>
   );

@@ -6,6 +6,9 @@ import { placeOrder,
     userOrders,
     updateStatus,
     verifyStripe,
+    getUnviewedCount,
+    getUnviewedOrders,
+    markAsViewed
 // verifyRazorpay
  } from '../controllers/orderController.js';
 import adminAuth from '../middleware/adminAuth.js';
@@ -16,6 +19,9 @@ import authUser from '../middleware/auth.js';
     //admin features
     orderRouter.post('/list',adminAuth, allOrders)
     orderRouter.post('/status',adminAuth, updateStatus)
+    orderRouter.get('/unviewed-count',adminAuth, getUnviewedCount)
+    orderRouter.get('/unviewed',adminAuth, getUnviewedOrders)
+    orderRouter.post('/mark-viewed',adminAuth, markAsViewed)
 
     //payment features
     orderRouter.post('/place',authUser, placeOrder)

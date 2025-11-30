@@ -262,6 +262,67 @@ const updateStatus = async (req, res) => {
 
 }
 
+// Get unviewed orders count for notifications
+const getUnviewedCount = async (req, res) => {
+  try {
+    const count = await orderModel.countDocuments({ viewed: false })
+    res.json({ success: true, count })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// Get all orders for notification dropdown (including viewed ones)
+const getUnviewedOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({})
+      .populate({
+        path: 'items.product',
+        select: 'sellername sellerphone'
+      })
+      .populate('user', 'name email')
+      .sort({ date: -1 })
+      .limit(20);
+
+    // Add seller information to each order item
+    const ordersWithSellerInfo = orders.map(order => {
+      const orderObj = order.toObject();
+      orderObj.items = orderObj.items.map(item => {
+        if (item.product) {
+          return {
+            ...item,
+            sellername: item.product.sellername,
+            sellerphone: item.product.sellerphone
+          };
+        }
+        return item;
+      });
+      return orderObj;
+    });
+
+    res.json({ success: true, orders: ordersWithSellerInfo })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// Mark orders as viewed
+const markAsViewed = async (req, res) => {
+  try {
+    const { orderIds } = req.body
+    await orderModel.updateMany(
+      { _id: { $in: orderIds } },
+      { viewed: true }
+    )
+    res.json({ success: true, message: "Orders marked as viewed" })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
 export {
   // verifyRazorpay,
   verifyStripe,
@@ -270,5 +331,8 @@ export {
   // placeOrderRazorpay,
   allOrders,
   userOrders,
-  updateStatus
+  updateStatus,
+  getUnviewedCount,
+  getUnviewedOrders,
+  markAsViewed
 }

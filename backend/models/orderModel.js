@@ -26,6 +26,9 @@ const orderItemSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  sellername: {
+    type: String
+  },
   reviewed: {
     type: Boolean,
     default: false

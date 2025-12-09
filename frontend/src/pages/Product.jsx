@@ -3,16 +3,19 @@ import { useParams } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext';
 import {assets} from '../assets/assets'
 import RelatedProducts from '../components/RelatedProducts';
+import axios from 'axios';
 
 
 const Product = () => {
 
 const {productId}=useParams();
 //console.log(productId);
-const {products,currency,addToCart} =useContext(ShopContext);
+const {products,currency,addToCart,backendUrl} =useContext(ShopContext);
 const [productData,setProductData]=useState(false);
 const [image,setImage]=useState('')
 const [size,setSize]=useState('');
+const [reviews, setReviews] = useState([]);
+const [reviewStats, setReviewStats] = useState({ totalReviews: 0, averageRating: 0 });
 
 const fetchProductData = useCallback(async()=>{
     products.map((item)=>{
@@ -25,9 +28,27 @@ const fetchProductData = useCallback(async()=>{
     })
 }, [products, productId]);
 
+const fetchReviews = useCallback(async () => {
+  try {
+    const response = await axios.get(`${backendUrl}/api/review/product/${productId}`);
+    if (response.data.success) {
+      setReviews(response.data.reviews);
+      setReviewStats({
+        totalReviews: response.data.totalReviews,
+        averageRating: response.data.averageRating
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+  }
+}, [backendUrl, productId]);
+
 useEffect(()=>{
   fetchProductData();
-},[fetchProductData])
+  if (productId) {
+    fetchReviews();
+  }
+},[fetchProductData, fetchReviews, productId])
 
 
 
@@ -61,12 +82,15 @@ useEffect(()=>{
 {productData.name}
   </h1>
   <div className="flex items-center gap-1 mt-2">
-    <img src={assets.star_icon} alt="" className="w-3 5" />
-    <img src={assets.star_icon} alt="" className="w-3 5" />
-    <img src={assets.star_icon} alt="" className="w-3 5" />
-    <img src={assets.star_icon} alt="" className="w-3 5" />
-    <img src={assets.star_dull_icon} alt="" className="w-3 5" />
-    <p className="pl-2">(122)</p>
+    {[1, 2, 3, 4, 5].map((star) => (
+      <img
+        key={star}
+        src={star <= Math.round(reviewStats.averageRating) ? assets.star_icon : assets.star_dull_icon}
+        alt=""
+        className="w-3.5"
+      />
+    ))}
+    <p className="pl-2">({reviewStats.totalReviews})</p>
   </div>
   <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
   <p className="mt-5 text-gray-500 md:w-4/5">{productData.description}</p>
@@ -94,17 +118,43 @@ useEffect(()=>{
         
         <div className="mt-20 px-5">
           <div className="flex">
-           <p className="border px-5 py-3 text-sm">Reviews (122)</p>
+           <p className="border px-5 py-3 text-sm">Reviews ({reviewStats.totalReviews})</p>
           </div>
-          <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
-            <p>Reverse Hash Lookup tries to reveal the original plaintext messages from specified hash values of
-several cryptographic hash functions. Online Reverse Hash Lookup Tools works with several online
-databases containing millions of hash values as well as engines using rainbow tables that can retrieve
-the plaintext messages in more sophisticated wa</p>
-<p>This issue can be solved with salting. A salt randomizes each hash by adding random data that is
-unique to each user to their plaintext hash, so even the same plaintext has a unique hash. If someone
-tried to compare hashes in a database, none of the hashes would match, even if the passwords were
-the same</p>
+          <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-700">
+            {reviews.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review this product!</p>
+            ) : (
+              reviews.map((review) => (
+                <div key={review._id} className="border-b pb-4 last:border-b-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold">{review.userName}</p>
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <img
+                            key={star}
+                            src={star <= review.rating ? assets.star_icon : assets.star_dull_icon}
+                            alt=""
+                            className="w-3.5"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <p className="text-gray-600">{review.comment}</p>
+                  {review.image?.url && (
+                    <img
+                      src={review.image.url}
+                      alt="Review"
+                      className="mt-2 w-24 h-24 object-cover rounded"
+                    />
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
 

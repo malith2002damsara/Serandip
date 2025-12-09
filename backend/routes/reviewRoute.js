@@ -1,11 +1,17 @@
-// import express from 'express';
-// import { addReview } from '../controllers/reviewController.js';
-// import { protect } from '../middleware/authMiddleware.js';
-// import upload from '../config/multer.js';
+import express from 'express';
+import { addReview, getProductReviews, getEligibleProducts } from '../controllers/reviewController.js';
+import authUser from '../middleware/auth.js';
+import upload from '../middleware/multer.js';
 
-// const router = express.Router();
+const reviewRouter = express.Router();
 
-// // POST /api/reviews - Add a new review
-// router.post('/', protect, upload.single('image'), addReview);
+// POST /api/review/add - Add a new review
+reviewRouter.post('/add', authUser, upload.single('image'), addReview);
 
-// export default router;
+// GET /api/review/product/:productId - Get all reviews for a product
+reviewRouter.get('/product/:productId', getProductReviews);
+
+// GET /api/review/eligible - Get products eligible for review
+reviewRouter.get('/eligible', authUser, getEligibleProducts);
+
+export default reviewRouter;

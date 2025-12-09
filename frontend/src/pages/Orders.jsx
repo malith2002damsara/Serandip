@@ -35,6 +35,7 @@ const Orders = () => {
             item['paymentMethod'] = order.paymentMethod
             item['date'] = order.date
             item['orderId'] = order._id
+            item['productId'] = item.product
             item['canReview'] = order.status === 'Delivered' && !item.reviewed
             allOrdersItem.push(item)
           })
@@ -84,7 +85,7 @@ const Orders = () => {
       }
 
       const response = await axios.post(
-        backendUrl + '/api/reviews',
+        backendUrl + '/api/review/add',
         formData,
         {
           headers: {

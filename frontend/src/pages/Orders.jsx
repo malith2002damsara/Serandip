@@ -79,7 +79,7 @@ const Orders = () => {
       formData.append('productId', productId)
       formData.append('orderId', orderId)
       formData.append('rating', review.rating)
-      formData.append('comment', review.comment)
+      formData.append('comment', review.comment || '')
       if (review.image) {
         formData.append('image', review.image)
       }
@@ -120,7 +120,7 @@ const Orders = () => {
         key={star}
         src={star <= rating ? assets.star_icon : assets.star_dull_icon}
         alt="star"
-        className="w-5 h-5 cursor-pointer"
+        className="w-4 h-4 cursor-pointer"
         onClick={isInteractive ? () => onRate(star) : null}
         onMouseEnter={isInteractive ? () => setHoverRating(star) : null}
         onMouseLeave={isInteractive ? () => setHoverRating(0) : null}
@@ -153,7 +153,7 @@ const Orders = () => {
                 <p className='mt-1'>Payment: <span className="text-gray-400">{item.paymentMethod}</span></p>
               </div>
             </div>
-            <div className="md:w-1/2 flex flex-col gap-4">
+            <div className="md:w-1/4 flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <p className={`min-w-2 h-2 rounded-full ${
                   item.status === 'Delivered' ? 'bg-green-500' : 
@@ -169,80 +169,86 @@ const Orders = () => {
                     orderId: item.orderId,
                     productId: item.productId
                   })}
-                  className="border px-4 py-2 text-sm font-medium rounded-sm bg-black text-white"
+                  className="border px-2 py-1.5 text-xs font-medium rounded bg-black text-white w-full sm:w-[200px]"
                 >
                   Add Review
                 </button>
               )}
               
               {item.status !== 'Delivered' && (
-                    <button onClick={loadOrderData} className="border px-4 py-2 text-sm font-medium rounded-sm">Track Order</button>
+                    <button onClick={loadOrderData} className="border px-2 py-1.5 text-xs font-medium rounded text-black w-full sm:w-[200px]">Track Order</button>
+              )}
+
+              {/* Review Form */}
+              {openReview?.productId === item.productId && openReview?.orderId === item.orderId && (
+                <div className="w-full sm:w-[300px] mt-2 p-2 bg-gray-50 rounded">
+                  <p className="text-xs font-medium mb-1">Rate:</p>
+                  <div className="flex items-center gap-0.5 mb-2">
+                    {renderStars(
+                      hoverRating || review.rating, 
+                      true, 
+                      (rating) => setReview({...review, rating})
+                    )}
+                  </div>
+                  <textarea
+                    value={review.comment}
+                    onChange={(e) => setReview({...review, comment: e.target.value})}
+                    placeholder="Write review..."
+                    className="w-full p-1.5 border rounded mb-2 text-xs"
+                    rows="2"
+                  />
+                  <div className="mb-2">
+                    <label className="text-xs text-gray-600 cursor-pointer block">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                      <span className="text-xs underline">Add image (optional)</span>
+                    </label>
+                    {review.preview && (
+                      <div className="relative mt-1 inline-block">
+                        <img 
+                          src={review.preview} 
+                          alt="Preview" 
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <button
+                          onClick={() => setReview({...review, image: null, preview: null})}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleReviewSubmit(item.productId, item.orderId)}
+                      disabled={isSubmitting}
+                      className="px-2 py-1 bg-black text-white text-xs rounded disabled:bg-gray-400 flex-1"
+                    >
+                      {isSubmitting ? 'Sending...' : 'Submit'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOpenReview(null)
+                        setReview({
+                          rating: 0,
+                          comment: '',
+                          image: null,
+                          preview: null
+                        })
+                      }}
+                      className="px-2 py-1 border text-xs rounded hover:bg-gray-100 flex-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
-
-            {/* Review Form */}
-            {openReview?.productId === item.productId && openReview?.orderId === item.orderId && (
-              <div className="w-full mt-4 p-4 border rounded-lg bg-gray-50">
-                <h3 className="font-medium mb-3">Rate this product</h3>
-                <div className="flex items-center gap-1 mb-4">
-                  {renderStars(
-                    hoverRating || review.rating, 
-                    true, 
-                    (rating) => setReview({...review, rating})
-                  )}
-                </div>
-                <textarea
-                  value={review.comment}
-                  onChange={(e) => setReview({...review, comment: e.target.value})}
-                  placeholder="Share your experience with this product..."
-                  className="w-full p-2 border rounded mb-3 min-h-[100px]"
-                />
-                <div className="mb-3">
-                  <label className="block mb-1 text-sm">Upload Image (optional)</label>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-gray-100 file:text-gray-700
-                      hover:file:bg-gray-200"
-                  />
-                  {review.preview && (
-                    <img 
-                      src={review.preview} 
-                      alt="Preview" 
-                      className="mt-2 max-w-[100px] max-h-[100px] object-cover"
-                    />
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleReviewSubmit(item.productId, item.orderId)}
-                    disabled={isSubmitting}
-                    className="px-4 py-2 bg-black text-white text-sm rounded disabled:bg-gray-400"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Review'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setOpenReview(null)
-                      setReview({
-                        rating: 0,
-                        comment: '',
-                        image: null,
-                        preview: null
-                      })
-                    }}
-                    className="px-4 py-2 border text-sm rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </div>

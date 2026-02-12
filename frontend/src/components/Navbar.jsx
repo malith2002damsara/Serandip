@@ -11,9 +11,9 @@ const Navbar = () => {
   const logout = () => {
     navigate('/login')
     localStorage.removeItem('token')
+    localStorage.removeItem('reviewNotificationsShown') // Clear review notifications on logout
     setToken('')
     setCartItems({})
-
   }
 
 

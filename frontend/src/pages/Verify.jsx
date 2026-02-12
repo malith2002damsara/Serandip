@@ -3,7 +3,7 @@ import { useContext, useCallback } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import { useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
-import axios from 'axios'
+import axios from '../config/axiosConfig'
 import { toast } from 'react-toastify'
 
 const Verify = () => {

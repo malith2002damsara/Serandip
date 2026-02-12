@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, useCallback } from "react";
-import axios from "axios";
+import axios from "../config/axiosConfig";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import PropTypes from 'prop-types';
@@ -258,15 +258,30 @@ const ShopContextProvider = (props) => {
 
   const getProductsData = useCallback(async () => {
     try {
+      console.log('Fetching products from:', `${backendUrl}/api/product/list`);
       const response = await axios.get(`${backendUrl}/api/product/list`);
+      
       if (response.data.success) {
+        console.log(`Successfully loaded ${response.data.products.length} products`);
         setProducts(response.data.products);
       } else {
+        console.error('Products fetch failed:', response.data.message);
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error(error.response?.data?.message || 'Error loading products');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        code: error.code
+      });
+      
+      if (error.code === 'ERR_NETWORK') {
+        toast.error(`Cannot connect to server at ${backendUrl}. Please check if backend is running.`);
+      } else {
+        toast.error(error.response?.data?.message || 'Error loading products');
+      }
     }
   }, [backendUrl]);
 

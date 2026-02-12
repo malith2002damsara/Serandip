@@ -2,8 +2,9 @@ import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { assets } from '../assets/assets';
 
-const ProductItem = ({ id, image, name, price }) => {
+const ProductItem = ({ id, image, name, price, averageRating, totalReviews }) => {
   const { currency } = useContext(ShopContext);
   
   return (
@@ -27,6 +28,22 @@ const ProductItem = ({ id, image, name, price }) => {
                       line-clamp-2 group-hover:text-black transition-colors duration-300'>
           {name}
         </p>
+        
+        {/* Rating Display */}
+        {totalReviews > 0 && (
+          <div className='flex items-center gap-1'>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <img
+                key={star}
+                src={star <= Math.round(averageRating) ? assets.star_icon : assets.star_dull_icon}
+                alt=""
+                className='w-2.5 sm:w-3'
+              />
+            ))}
+            <span className='text-xs text-gray-600 ml-1'>({totalReviews})</span>
+          </div>
+        )}
+        
         <p className='text-sm sm:text-base lg:text-lg font-bold text-gray-900'>
           {currency}{price.toLocaleString()}
         </p>
@@ -39,7 +56,9 @@ ProductItem.propTypes = {
   id: PropTypes.string.isRequired,
   image: PropTypes.arrayOf(PropTypes.string).isRequired,
   name: PropTypes.string.isRequired,
-  price: PropTypes.number.isRequired
+  price: PropTypes.number.isRequired,
+  averageRating: PropTypes.number,
+  totalReviews: PropTypes.number
 };
 
 export default ProductItem;

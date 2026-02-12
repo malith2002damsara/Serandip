@@ -16,6 +16,7 @@ const authUser = async (req,res,next)=>{
     const token_decode = jwt.verify(token, process.env.JWT_SECRET)
     console.log('Auth Middleware - Token verified successfully, userId:', token_decode.id);
     req.body.userId = token_decode.id
+    req.userId = token_decode.id // Also set it on req object for multipart/form-data
     next()
   }catch(error){
     console.log('Auth Middleware - Token verification failed:', error.message);

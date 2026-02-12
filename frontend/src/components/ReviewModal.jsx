@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { assets } from '../assets/assets';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import axios from '../config/axiosConfig';
 
 const ReviewModal = ({ isOpen, onClose, product, orderId, onReviewSubmitted, backendUrl, token }) => {
   const [rating, setRating] = useState(0);
@@ -15,27 +15,33 @@ const ReviewModal = ({ isOpen, onClose, product, orderId, onReviewSubmitted, bac
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (rating === 0) {
-      toast.error('Please select a rating');
-      return;
-    }
-
-    if (!comment.trim()) {
-      toast.error('Please write a comment');
+    // At least one of rating or comment must be provided
+    if (rating === 0 && !comment.trim()) {
+      toast.error('Please provide at least a rating or a review comment');
       return;
     }
 
     try {
       setIsSubmitting(true);
 
+      const reviewData = {
+        productId: product.productId,
+        orderId: orderId,
+      };
+
+      // Only include rating if provided
+      if (rating > 0) {
+        reviewData.rating = rating;
+      }
+
+      // Only include comment if provided
+      if (comment.trim()) {
+        reviewData.comment = comment.trim();
+      }
+
       const response = await axios.post(
         backendUrl + '/api/review/add',
-        {
-          productId: product.productId,
-          orderId: orderId,
-          rating,
-          comment: comment.trim()
-        },
+        reviewData,
         { headers: { token } }
       );
 
@@ -70,6 +76,10 @@ const ReviewModal = ({ isOpen, onClose, product, orderId, onReviewSubmitted, bac
           </button>
         </div>
 
+        <p className="text-xs text-gray-500 mb-4 px-3 py-2 bg-blue-50 rounded border border-blue-100">
+          💡 You can provide a rating, a written review, or both!
+        </p>
+
         {product && (
           <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded">
             <img
@@ -88,7 +98,9 @@ const ReviewModal = ({ isOpen, onClose, product, orderId, onReviewSubmitted, bac
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Your Rating</label>
+            <label className="block text-sm font-medium mb-2">
+              Your Rating <span className="text-gray-400 text-xs">(optional)</span>
+            </label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -111,10 +123,21 @@ const ReviewModal = ({ isOpen, onClose, product, orderId, onReviewSubmitted, bac
                 </button>
               ))}
             </div>
+            {rating > 0 && (
+              <button
+                type="button"
+                onClick={() => setRating(0)}
+                className="text-xs text-gray-500 hover:text-gray-700 mt-1"
+              >
+                Clear rating
+              </button>
+            )}
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Your Review</label>
+            <label className="block text-sm font-medium mb-2">
+              Your Review <span className="text-gray-400 text-xs">(optional)</span>
+            </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}

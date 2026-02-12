@@ -14,17 +14,17 @@ const reviewSchema = new mongoose.Schema({
   order: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order',
-    required: true
+    required: false
   },
   rating: {
     type: Number,
-    required: true,
+    required: false,
     min: 1,
     max: 5
   },
   comment: {
     type: String,
-    required: true,
+    required: false,
     trim: true
   },
   image: {
@@ -37,5 +37,9 @@ const reviewSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
+// Index for faster queries
+reviewSchema.index({ product: 1, createdAt: -1 });
+reviewSchema.index({ user: 1, product: 1 });
+
+const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema, "reviews");
 export default Review;

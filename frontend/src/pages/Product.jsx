@@ -3,14 +3,15 @@ import { useParams } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext';
 import {assets} from '../assets/assets'
 import RelatedProducts from '../components/RelatedProducts';
-import axios from 'axios';
+import axios from '../config/axiosConfig';
+import { toast } from 'react-toastify';
 
 
 const Product = () => {
 
 const {productId}=useParams();
 //console.log(productId);
-const {products,currency,addToCart,backendUrl} =useContext(ShopContext);
+const {products,currency,addToCart,backendUrl,token} =useContext(ShopContext);
 const [productData,setProductData]=useState(false);
 const [image,setImage]=useState('')
 const [size,setSize]=useState('');
@@ -30,16 +31,44 @@ const fetchProductData = useCallback(async()=>{
 
 const fetchReviews = useCallback(async () => {
   try {
-    const response = await axios.get(`${backendUrl}/api/review/product/${productId}`);
+    const reviewUrl = `${backendUrl}/api/review/product/${productId}`;
+    console.log('Fetching reviews for product:', productId);
+    console.log('Backend URL:', backendUrl);
+    console.log('Full review URL:', reviewUrl);
+    
+    const response = await axios.get(reviewUrl);
+    console.log('Reviews response status:', response.status);
+    console.log('Reviews response data:', JSON.stringify(response.data, null, 2));
+    
     if (response.data.success) {
-      setReviews(response.data.reviews);
+      const reviewsData = response.data.reviews || [];
+      const totalCount = response.data.totalReviews || 0;
+      const avgRating = response.data.averageRating || 0;
+      
+      console.log('Setting reviews:', reviewsData.length, 'reviews');
+      console.log('Setting stats - Total:', totalCount, 'Average:', avgRating);
+      
+      setReviews(reviewsData);
       setReviewStats({
-        totalReviews: response.data.totalReviews,
-        averageRating: response.data.averageRating
+        totalReviews: totalCount,
+        averageRating: avgRating
       });
+    } else {
+      console.warn('API returned success=false');
+      setReviews([]);
+      setReviewStats({ totalReviews: 0, averageRating: 0 });
     }
   } catch (error) {
     console.error('Error fetching reviews:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      url: error.config?.url
+    });
+    // Set empty state on error
+    setReviews([]);
+    setReviewStats({ totalReviews: 0, averageRating: 0 });
   }
 }, [backendUrl, productId]);
 
@@ -49,7 +78,6 @@ useEffect(()=>{
     fetchReviews();
   }
 },[fetchProductData, fetchReviews, productId])
-
 
 
   return productData ? (
@@ -114,12 +142,14 @@ useEffect(()=>{
 </div>
 
       </div>
-      {/* ---------------Descrption & Review Section -------------------- */}
+      {/* ---------------Review Section -------------------- */}
         
         <div className="mt-20 px-5">
           <div className="flex">
            <p className="border px-5 py-3 text-sm">Reviews ({reviewStats.totalReviews})</p>
           </div>
+
+          {/* Reviews List */}
           <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-700">
             {reviews.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review this product!</p>
@@ -129,22 +159,29 @@ useEffect(()=>{
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <p className="font-semibold">{review.userName}</p>
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <img
-                            key={star}
-                            src={star <= review.rating ? assets.star_icon : assets.star_dull_icon}
-                            alt=""
-                            className="w-3.5"
-                          />
-                        ))}
-                      </div>
+                      {review.rating && review.rating > 0 && (
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <img
+                              key={star}
+                              src={star <= review.rating ? assets.star_icon : assets.star_dull_icon}
+                              alt=""
+                              className="w-3.5"
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <p className="text-xs text-gray-500">
                       {new Date(review.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <p className="text-gray-600">{review.comment}</p>
+                  {review.comment && (
+                    <p className="text-gray-600">{review.comment}</p>
+                  )}
+                  {!review.comment && review.rating && (
+                    <p className="text-gray-400 italic text-xs">Customer gave a rating without written review</p>
+                  )}
                   {review.image?.url && (
                     <img
                       src={review.image.url}

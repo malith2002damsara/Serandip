@@ -3,7 +3,7 @@ import CartTotal from '../components/CartTotal'
 import Title from '../components/Title'
 import { assets } from '../assets/assets'
 import { ShopContext } from '../context/ShopContext'
-import axios from 'axios'
+import axios from '../config/axiosConfig'
 import { toast } from 'react-toastify'
 
 const PlaceOrder = () => {

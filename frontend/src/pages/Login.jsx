@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react'
 import { ShopContext } from '../context/ShopContext';
-import axios from 'axios';
+import axios from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 
 const Login = () => {

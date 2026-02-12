@@ -2,15 +2,17 @@ import { useContext,useEffect,useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import {assets} from '../assets/assets'
 import ProductItem from '../components/ProductItem';
+import axios from '../config/axiosConfig';
 
 const Collection = () => {
 
-  const {products,search,showSearch}=useContext(ShopContext);
+  const {products,search,showSearch,backendUrl}=useContext(ShopContext);
   const [showFilter,setShowFilter]=useState(false);
   const [filterProducts,setFilterProducts]=useState([]);
   const [category,setCategory]=useState([]);
   const [subCategory,setSubCategory]=useState([]);
   const [sortType,setSortType]=useState('relavent')
+  const [reviewsData, setReviewsData] = useState({});
 
   const toggleCategory=(e)=>{
 
@@ -47,8 +49,50 @@ const Collection = () => {
     }
 
     setFilterProducts(productsCopy)
+    
+    // Fetch reviews for filtered products
+    if (productsCopy.length > 0) {
+      fetchReviewsForProducts(productsCopy);
+    }
 
   }
+
+  const fetchReviewsForProducts = async (productsList) => {
+    try {
+      const reviewPromises = productsList.map(async (product) => {
+        try {
+          const response = await axios.get(`${backendUrl}/api/review/product/${product._id}`);
+          if (response.data.success) {
+            return {
+              productId: product._id,
+              averageRating: response.data.averageRating || 0,
+              totalReviews: response.data.totalReviews || 0
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching reviews for product ${product._id}:`, error);
+        }
+        return {
+          productId: product._id,
+          averageRating: 0,
+          totalReviews: 0
+        };
+      });
+
+      const reviewResults = await Promise.all(reviewPromises);
+      const reviewsMap = {};
+      reviewResults.forEach(result => {
+        reviewsMap[result.productId] = {
+          averageRating: result.averageRating,
+          totalReviews: result.totalReviews
+        };
+      });
+      
+      setReviewsData(reviewsMap);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
 
   const sortProduct=()=>{
 
@@ -140,9 +184,20 @@ const Collection = () => {
 
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
           {
-            filterProducts.map((item,index)=>(
-                         <ProductItem key={index} name={item.name} id={item._id} price={item.price} image={item.image}/>
-            ))
+            filterProducts.map((item,index)=> {
+              const productReviews = reviewsData[item._id] || { averageRating: 0, totalReviews: 0 };
+              return (
+                <ProductItem 
+                  key={index} 
+                  name={item.name} 
+                  id={item._id} 
+                  price={item.price} 
+                  image={item.image}
+                  averageRating={productReviews.averageRating}
+                  totalReviews={productReviews.totalReviews}
+                />
+              );
+            })
           }
         </div>
       </div>

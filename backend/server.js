@@ -38,6 +38,7 @@ const initializeConnections = async () => {
 
 // Middlewares
 app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true }))
 
 // Enhanced CORS configuration for Vercel
 app.use(cors({

@@ -8,7 +8,7 @@ export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
   const currency = 'LKR';
-  const delivery_fee = 10;
+  const delivery_fee = 350;
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://ceylonbackend.vercel.app';
   
   // Debug logging

@@ -416,7 +416,8 @@ const Orders = ({ token }) => {
                     </p>
                     <p className="text-gray-600">{order.address.street},</p>
                     <p className="text-gray-600">
-                      {order.address.city}, {order.address.state}, {order.address.country}, {order.address.zipcode}
+
+                         {[order.address.city, order.address.state, order.address.country, order.address.zipCode || order.address.zipcode].filter(Boolean).join(', ')}
                     </p>
                     <p className="text-gray-600">Phone: {order.address.phone}</p>
                   </div>

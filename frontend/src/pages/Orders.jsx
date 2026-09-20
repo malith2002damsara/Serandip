@@ -66,7 +66,14 @@ const Orders = () => {
                   <p>Size: {item.size}</p>
                 </div>
                 <p className='mt-1'>Date: <span className="text-gray-400">{new Date(item.date).toDateString()}</span></p>
-                <p className='mt-1'>Payment: <span className="text-gray-400">{item.paymentMethod}</span></p>
+                <p className='mt-1'>
+                  Payment: <span className="text-gray-400">{item.paymentMethod}</span>
+                  {item.paymentMethod === 'Card' && (
+                    <span className={`ml-2 text-xs font-medium ${item.payment ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {item.payment ? 'Paid' : 'Pending'}
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
             <div className="md:w-1/4 flex flex-col gap-4">

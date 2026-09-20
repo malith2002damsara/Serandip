@@ -66,6 +66,10 @@ const orderSchema = new mongoose.Schema({
     required: true,
     default: false 
   },
+  // PayHere payment id (saved after a successful card payment)
+  paymentId: {
+    type: String
+  },
   date: { 
     type: Date, 
     default: Date.now 

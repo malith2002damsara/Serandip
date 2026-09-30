@@ -48,7 +48,7 @@ app.use(cors({
     
     const allowedOrigins = [
       'https://ceylonadmin.vercel.app',
-      'https://ceylonfrontend.vercel.app',
+      'https://www.ceylonwear.com.lk',
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3000'

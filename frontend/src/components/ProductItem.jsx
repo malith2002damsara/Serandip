@@ -45,7 +45,7 @@ const ProductItem = ({ id, image, name, price, averageRating, totalReviews }) =>
         )}
         
         <p className='text-sm sm:text-base lg:text-lg font-bold text-gray-900'>
-          {currency}{price.toLocaleString()}
+          {currency} {price.toLocaleString()}
         </p>
       </div>
     </Link>

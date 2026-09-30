@@ -182,9 +182,9 @@ useEffect(()=>{
                   {review.comment && (
                     <p className="text-gray-600">{review.comment}</p>
                   )}
-                  {/* {!review.comment && review.rating && (
+                  {!review.comment && review.rating && (
                     <p className="text-gray-400 italic text-xs">Customer gave a rating without written review</p>
-                  )} */}
+                  )}
                   {review.image?.url && (
                     <img
                       src={review.image.url}

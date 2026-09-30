@@ -9,6 +9,7 @@ import cartRouter from './routes/cartRoute.js'
 import orderRouter from './routes/orderRoute.js'
 import sellerRouter from './routes/sellerRoute.js'
 import reviewRouter from './routes/reviewRoute.js'
+import settingRouter from './routes/settingRoute.js'
 
 // App config
 const app = express()
@@ -110,6 +111,7 @@ app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/seller', sellerRouter)
 app.use('/api/review', reviewRouter)
+app.use('/api/settings', settingRouter)
 
 app.get('/', (req, res) => {
   res.json({ 

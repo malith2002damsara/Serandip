@@ -29,48 +29,51 @@ const fetchProductData = useCallback(async()=>{
     })
 }, [products, productId]);
 
+const [hasMore, setHasMore] = useState(false);
+const [loadingMore, setLoadingMore] = useState(false);
+
+// First load: only the first N reviews (N = REVIEWS_INITIAL_COUNT / admin setting, decided by backend)
 const fetchReviews = useCallback(async () => {
   try {
-    const reviewUrl = `${backendUrl}/api/review/product/${productId}`;
-    console.log('Fetching reviews for product:', productId);
-    console.log('Backend URL:', backendUrl);
-    console.log('Full review URL:', reviewUrl);
-    
-    const response = await axios.get(reviewUrl);
-    console.log('Reviews response status:', response.status);
-    console.log('Reviews response data:', JSON.stringify(response.data, null, 2));
-    
+    const response = await axios.get(`${backendUrl}/api/review/product/${productId}`);
     if (response.data.success) {
-      const reviewsData = response.data.reviews || [];
-      const totalCount = response.data.totalReviews || 0;
-      const avgRating = response.data.averageRating || 0;
-      
-      console.log('Setting reviews:', reviewsData.length, 'reviews');
-      console.log('Setting stats - Total:', totalCount, 'Average:', avgRating);
-      
-      setReviews(reviewsData);
+      setReviews(response.data.reviews || []);
+      setHasMore(!!response.data.hasMore);
       setReviewStats({
-        totalReviews: totalCount,
-        averageRating: avgRating
+        totalReviews: response.data.totalReviews || 0,
+        averageRating: response.data.averageRating || 0
       });
     } else {
-      console.warn('API returned success=false');
       setReviews([]);
+      setHasMore(false);
       setReviewStats({ totalReviews: 0, averageRating: 0 });
     }
   } catch (error) {
-    console.error('Error fetching reviews:', error);
-    console.error('Error details:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      url: error.config?.url
-    });
-    // Set empty state on error
+    console.error('Error fetching reviews:', error.message);
     setReviews([]);
+    setHasMore(false);
     setReviewStats({ totalReviews: 0, averageRating: 0 });
   }
 }, [backendUrl, productId]);
+
+// "See more": load all remaining reviews (limit=0 means no limit)
+const loadMoreReviews = async () => {
+  try {
+    setLoadingMore(true);
+    const response = await axios.get(
+      `${backendUrl}/api/review/product/${productId}?skip=${reviews.length}&limit=0`
+    );
+    if (response.data.success) {
+      setReviews((prev) => [...prev, ...(response.data.reviews || [])]);
+      setHasMore(false);
+    }
+  } catch (error) {
+    console.error('Error loading more reviews:', error.message);
+    toast.error('Could not load more reviews');
+  } finally {
+    setLoadingMore(false);
+  }
+};
 
 useEffect(()=>{
   fetchProductData();
@@ -191,6 +194,16 @@ useEffect(()=>{
                   )}
                 </div>
               ))
+            )}
+
+            {hasMore && (
+              <button
+                onClick={loadMoreReviews}
+                disabled={loadingMore}
+                className="self-center border px-6 py-2 text-sm hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? 'Loading...' : `See more (${reviewStats.totalReviews - reviews.length} more)`}
+              </button>
             )}
           </div>
         </div>

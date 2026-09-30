@@ -11,6 +11,7 @@ import Sellers from './pages/Sellers';
 import Add from './pages/Add';
 import List from './pages/List';
 import Orders from './pages/Orders';
+import ReviewSettings from './pages/ReviewSettings';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -39,6 +40,7 @@ const App = () => {
                 <Route path="/add" element={<Add token={token} />} />
                 <Route path="/list" element={<List token={token} />} />
                 <Route path="/orders" element={<Orders token={token} />} />
+                <Route path="/review-settings" element={<ReviewSettings token={token} />} />
                
               </Routes>
             </div>

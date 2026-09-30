@@ -1,6 +1,8 @@
 import Review from '../models/reviewModel.js';
 import Order from '../models/orderModel.js';
 import cloudinary from '../config/cloudinary.js';
+import mongoose from 'mongoose';
+import { getReviewsInitialCount } from './settingController.js';
 
 // @desc    Add a new review
 // @route   POST /api/review/add
@@ -115,30 +117,45 @@ export const addReview = async (req, res) => {
   }
 };
 
-// @desc    Get all reviews for a product
-// @route   GET /api/review/product/:productId
+// @desc    Get reviews for a product (paginated: first N, then "see more")
+// @route   GET /api/review/product/:productId?skip=0&limit=3
 // @access  Public
 export const getProductReviews = async (req, res) => {
   try {
     const { productId } = req.params;
-    console.log('Getting reviews for product ID:', productId);
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: 'Invalid product ID' });
+    }
 
-    const reviews = await Review.find({ product: productId })
+    const initialCount = await getReviewsInitialCount();
+    const skip = Math.max(parseInt(req.query.skip, 10) || 0, 0);
+    // limit defaults to the admin-configured initial count; "see more" passes limit=0 => all remaining
+    const rawLimit = req.query.limit === undefined ? initialCount : parseInt(req.query.limit, 10);
+    const limit = Number.isNaN(rawLimit) ? initialCount : Math.max(rawLimit, 0);
+
+    const productObjectId = new mongoose.Types.ObjectId(productId);
+
+    // Stats over ALL reviews of this product
+    const [stats] = await Review.aggregate([
+      { $match: { product: productObjectId } },
+      { $group: {
+          _id: null,
+          totalReviews: { $sum: 1 },
+          ratingSum: { $sum: { $cond: [{ $gt: ['$rating', 0] }, '$rating', 0] } },
+          ratingCount: { $sum: { $cond: [{ $gt: ['$rating', 0] }, 1, 0] } }
+      } }
+    ]);
+    const totalReviews = stats?.totalReviews || 0;
+    const averageRating = stats?.ratingCount ? stats.ratingSum / stats.ratingCount : 0;
+
+    let query = Review.find({ product: productObjectId })
       .populate('user', 'name')
       .sort({ createdAt: -1 })
-      .lean();
+      .skip(skip);
+    if (limit > 0) query = query.limit(limit);
+    const reviews = await query.lean();
 
-    console.log('Found reviews count:', reviews.length);
-    console.log('Reviews data:', JSON.stringify(reviews, null, 2));
-
-    // Calculate average rating (only from reviews that have ratings)
-    const reviewsWithRatings = reviews.filter(review => review.rating && review.rating > 0);
-    const totalReviews = reviews.length;
-    const averageRating = reviewsWithRatings.length > 0
-      ? reviewsWithRatings.reduce((sum, review) => sum + review.rating, 0) / reviewsWithRatings.length
-      : 0;
-
-    const responseData = {
+    res.status(200).json({
       success: true,
       reviews: reviews.map(review => ({
         _id: review._id,
@@ -149,11 +166,10 @@ export const getProductReviews = async (req, res) => {
         createdAt: review.createdAt
       })),
       totalReviews,
-      averageRating: Math.round(averageRating * 10) / 10
-    };
-
-    console.log('Sending response:', JSON.stringify(responseData, null, 2));
-    res.status(200).json(responseData);
+      averageRating: Math.round(averageRating * 10) / 10,
+      initialCount,
+      hasMore: skip + reviews.length < totalReviews
+    });
   } catch (error) {
     console.error('Error fetching reviews:', error);
     res.status(500).json({ success: false, message: error.message || 'Server error' });

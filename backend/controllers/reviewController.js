@@ -2,6 +2,7 @@ import Review from '../models/reviewModel.js';
 import Order from '../models/orderModel.js';
 import cloudinary from '../config/cloudinary.js';
 import mongoose from 'mongoose';
+import userModel from '../models/userModel.js';
 import { getReviewsInitialCount } from './settingController.js';
 
 // @desc    Add a new review
@@ -149,7 +150,7 @@ export const getProductReviews = async (req, res) => {
     const averageRating = stats?.ratingCount ? stats.ratingSum / stats.ratingCount : 0;
 
     let query = Review.find({ product: productObjectId })
-      .populate('user', 'name')
+      .populate({ path: 'user', model: userModel, select: 'name' })
       .sort({ createdAt: -1 })
       .skip(skip);
     if (limit > 0) query = query.limit(limit);

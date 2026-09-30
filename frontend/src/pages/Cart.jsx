@@ -193,7 +193,7 @@ const Cart = () => {
                     </h3>
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-sm xs:text-base font-bold text-gray-900">
-                        {currency}{productData.price.toLocaleString()}
+                        {currency} {productData.price.toLocaleString()}
                       </span>
                       <span className="px-2 py-1 bg-gray-100 border rounded text-xs font-medium">
                         {item.size}
@@ -254,7 +254,7 @@ const Cart = () => {
                   {/* Total Price */}
                   <div className="text-right">
                     <span className="text-base xs:text-lg font-bold text-gray-900">
-                      {currency}{(productData.price * item.quantity).toLocaleString()}
+                      {currency} {(productData.price * item.quantity).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -278,7 +278,7 @@ const Cart = () => {
                     </h3>
                     <div className="flex items-center gap-4">
                       <span className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
-                        {currency}{productData.price.toLocaleString()}
+                        {currency} {productData.price.toLocaleString()}
                       </span>
                       <span className="px-3 py-1 bg-gray-100 border rounded-md 
                                        text-sm font-medium">
@@ -322,7 +322,7 @@ const Cart = () => {
                 {/* Total Price - Column 10-11 */}
                 <div className="col-span-2 text-right">
                   <span className="text-base md:text-lg font-bold text-gray-900">
-                    {currency}{(productData.price * item.quantity).toLocaleString()}
+                    {currency} {(productData.price * item.quantity).toLocaleString()}
                   </span>
                 </div>
 

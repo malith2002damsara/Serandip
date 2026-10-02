@@ -1,4 +1,3 @@
-
 import Title from '../components/Title';
 import { assets } from '../assets/assets';
 import NewsletterBox from '../components/NewsletterBox';
@@ -16,22 +15,30 @@ const About = () => {
           <div className="lg:w-1/2">
             <img 
               src={assets.about_img} 
-              alt="About Ceylon" 
+              alt="About CeylonWear" 
               className="w-full rounded-2xl shadow-2xl object-cover transform hover:scale-105 transition-transform duration-500" 
             />
           </div>
           <div className="lg:w-1/2 space-y-6">
-            <div className="prose prose-lg text-gray-600 leading-relaxed">
+            <div className="prose prose-lg text-gray-600 leading-relaxed space-y-4">
               <p className="text-lg">
-                Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage.
+                CeylonWear was born from a simple idea: Sri Lankan style deserves to be worn every day.
+                Inspired by the island&apos;s vibrant batik, handloom traditions and tropical colours, we
+                create and curate clothing for women, men and kids that is comfortable in our climate and
+                proud of its roots.
               </p>
               <p className="text-lg">
-                It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage.
+                Our name says it all &ndash; <strong>Ceylon</strong> for our heritage and <strong>Wear</strong> for
+                the everyday. We work with local designers and tailors, and every order is packed with care and
+                delivered to your door anywhere in Sri Lanka, from Colombo to Jaffna, Kandy to Galle.
               </p>
             </div>
             <div className="border-l-4 border-black pl-6 bg-gray-50 p-6 rounded-r-lg">
               <h3 className='text-2xl font-bold text-gray-800 mb-3'>OUR MISSION</h3>
-              <p className="text-gray-600 text-lg">Latin literature from 45 BC</p>
+              <p className="text-gray-600 text-lg">
+                To weave the spirit of Sri Lanka into modern fashion &ndash; offering quality clothing at fair
+                prices while supporting local craftsmanship.
+              </p>
             </div>
           </div>
         </div>
@@ -50,7 +57,7 @@ const About = () => {
                 </svg>
               </div>
               <h4 className="text-xl font-bold text-center mb-4">Quality Assurance</h4>
-              <p className='text-gray-600 text-center leading-relaxed'>looked up one of the more obscure Latin words, consectetur</p>
+              <p className='text-gray-600 text-center leading-relaxed'>Every piece is checked for fabric, stitching and colour before it leaves our store, so you receive clothing you can trust.</p>
             </div>
             
             <div className="bg-white border-2 border-gray-200 hover:border-black transition-colors duration-300 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
@@ -60,7 +67,7 @@ const About = () => {
                 </svg>
               </div>
               <h4 className="text-xl font-bold text-center mb-4">Convenience</h4>
-              <p className='text-gray-600 text-center leading-relaxed'>looked up one of the more obscure Latin words, consectetur</p>
+              <p className='text-gray-600 text-center leading-relaxed'>Easy online shopping, secure payments in LKR and island-wide delivery &ndash; fashion that comes to you, wherever you are in Sri Lanka.</p>
             </div>
             
             <div className="bg-white border-2 border-gray-200 hover:border-black transition-colors duration-300 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
@@ -70,7 +77,7 @@ const About = () => {
                 </svg>
               </div>
               <h4 className="text-xl font-bold text-center mb-4">Customer Service</h4>
-              <p className='text-gray-600 text-center leading-relaxed'>looked up one of the more obscure Latin words, consectetur</p>
+              <p className='text-gray-600 text-center leading-relaxed'>Our friendly Sri Lankan team is here to help with sizes, orders and exchanges. Reach us by phone, email or WhatsApp.</p>
             </div>
           </div>
         </div>

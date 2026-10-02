@@ -88,6 +88,19 @@ const Sidebar = ({ setToken }) => {
 
         <NavLink
           className={({ isActive }) =>
+            `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l hover:bg-pink-50 transition-colors ${isActive ? 'bg-pink-100 border-pink-300' : ''
+            }`
+          }
+          to='/users'
+        >
+          <svg className="w-5 h-5 text-pink-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+          </svg>
+          <p className='hidden lg:block'>Users</p>
+        </NavLink>
+
+        <NavLink
+          className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l hover:bg-yellow-50 transition-colors ${isActive ? 'bg-yellow-100 border-yellow-300' : ''
             }`
           }

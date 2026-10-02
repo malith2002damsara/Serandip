@@ -24,8 +24,11 @@ const Navbar = () => {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex items-center justify-between h-16 lg:h-20'>
           {/* Logo */}
-          <Link to='/' className='flex-shrink-0'> 
-            <img src={assets.logo} className='h-8 lg:h-10 w-auto' alt="Ceylon Logo" /> 
+          <Link to='/' className='flex-shrink-0 flex items-center gap-2'> 
+            <img src={assets.logo} className='h-10 lg:h-12 w-auto rounded-full' alt="CeylonWear Logo" /> 
+            <span className='prata-regular text-lg lg:text-xl font-bold tracking-wide text-gray-800'>
+              Ceylon<span className='text-[#1e2a6b]'>Wear</span>
+            </span>
           </Link>
 
           {/* Navigation Links */}
@@ -148,7 +151,7 @@ const Navbar = () => {
           <div className='flex flex-col h-full'>
             {/* Header */}
             <div className='flex items-center justify-between p-6 border-b border-gray-200'>
-              <h2 className='text-lg font-semibold text-gray-800'>Menu</h2>
+              <h2 className='text-lg font-semibold text-gray-800'>CeylonWear</h2>
               <button 
                 onClick={() => setVisible(false)} 
                 className='p-2 rounded-full hover:bg-gray-100 transition-colors duration-200'

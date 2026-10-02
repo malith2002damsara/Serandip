@@ -114,7 +114,7 @@ const Login = () => {
             </div>
             <p className="text-gray-600 text-sm">
               {currentState === 'Login' 
-                ? 'Welcome back to Ceylon' 
+                ? 'Welcome back to CeylonWear' 
                 : 'Create your account'
               }
             </p>

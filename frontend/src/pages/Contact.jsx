@@ -1,6 +1,6 @@
 import Title from '../components/Title'
 import {assets} from '../assets/assets'
-import NewsletterBox from '../components/NewsletterBox'
+// import NewsletterBox from '../components/NewsletterBox'
 
 const Contact = () => {
   return (
@@ -81,7 +81,7 @@ const Contact = () => {
         </div>
         
         <div className="pb-16">
-          <NewsletterBox/>
+          {/* <NewsletterBox/> */}
         </div>
       </div>
     </div>

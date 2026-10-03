@@ -304,8 +304,32 @@ const updateStatus = async (req, res) => {
   try {
 
     const { orderId, status } = req.body
-    await orderModel.findByIdAndUpdate(orderId, { status })
-    res.json({ success: true, message: "Order status updated successfully" })
+
+    const existing = await orderModel.findById(orderId)
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Order not found" })
+    }
+
+    // Payment follows the delivery status:
+    //  - Delivered            -> payment becomes Paid
+    //  - any other status     -> payment goes back to Pending (COD / PayPal orders)
+    // Card orders are paid online through PayHere, so they are only changed by Delivered
+    // (changing them back to unpaid would also hide them from the admin order list).
+    const update = { status }
+    if (status === 'Delivered') {
+      update.payment = true
+    } else if (existing.paymentMethod !== 'Card') {
+      update.payment = false
+    }
+
+    const order = await orderModel.findByIdAndUpdate(orderId, update, { new: true })
+
+    res.json({
+      success: true,
+      message: "Order status updated successfully",
+      status: order.status,
+      payment: order.payment
+    })
 
   } catch (error) {
     console.log(error);

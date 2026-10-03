@@ -123,17 +123,19 @@ const Orders = ({ token }) => {
       );
       if (response.data.success) {
         // Update the local state instead of refetching all orders
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order._id === orderId ? { ...order, status: event.target.value } : order
-          )
+        // (Delivered also marks the payment as Paid on the server)
+        const newStatus = event.target.value;
+        const patch = (order) =>
+          order._id === orderId
+            ? { ...order, status: newStatus, payment: response.data.payment ?? order.payment }
+            : order;
+        setOrders(prevOrders => prevOrders.map(patch));
+        setFilteredOrders(prevOrders => prevOrders.map(patch));
+        toast.success(
+          newStatus === 'Delivered'
+            ? 'Order delivered and payment marked as Paid'
+            : `Order status updated to ${newStatus}`
         );
-        setFilteredOrders(prevOrders => 
-          prevOrders.map(order => 
-            order._id === orderId ? { ...order, status: event.target.value } : order
-          )
-        );
-        toast.success(`Order status updated to ${event.target.value}`);
       }
     } catch (error) {
       console.log(error);
@@ -378,13 +380,7 @@ const Orders = ({ token }) => {
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6">
                 {/* Order Icon */}
-                <div className="md:col-span-1 flex items-start justify-center">
-                  <img 
-                    className="w-12 h-12 object-contain" 
-                    src={assets.parcel_icon} 
-                    alt="Order icon"
-                  />
-                </div>
+               
 
                 {/* Order Items and Address */}
                 <div className="md:col-span-5 space-y-3">
@@ -394,11 +390,21 @@ const Orders = ({ token }) => {
                         key={idx} 
                         className={`py-2 ${idx !== order.items.length - 1 ? 'border-b border-gray-100' : ''}`}
                       >
-                        <p className="mb-1">
-                          <span className="font-medium">{item.name}</span> 
-                          <span className="text-gray-600 ml-2">x {item.quantity}</span>
-                          {item.size && <span className="text-gray-500 text-xs ml-2">({item.size})</span>}
-                        </p>
+                        <div className="flex items-center gap-3 mb-1">
+                          <img
+                            src={Array.isArray(item.image) ? item.image[0] : item.image}
+                            alt={item.name}
+                            className="w-14 h-14 object-cover rounded border border-gray-200 flex-shrink-0"
+                          />
+                          <p>
+                            <span className="font-medium">{item.name}</span>
+                            <span className="text-gray-600 ml-2">x {item.quantity}</span>
+                            {item.size && <span className="text-gray-500 text-xs ml-2">({item.size})</span>}
+                            <span className="block text-sm text-gray-500">
+                              {currency} {Number(item.price).toLocaleString()} each
+                            </span>
+                          </p>
+                        </div>
                         {(item.sellername || item.sellerphone) && (
                           <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
                             <span className="font-medium">Seller:</span>
